@@ -1,0 +1,9 @@
+**/output/
+**/output_ml/
+**/Sony/
+**/__pycache__
+**/*.png
+**/tb_logger/
+**/pretrained/
+ML/experiments/
+**/Sony.zip
