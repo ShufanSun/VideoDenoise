@@ -22,8 +22,8 @@ datasets:
     n_workers: 20  # per GPU
     batch_size: 56
     GT_size: 144
-    use_flip: false
-    use_rot: false
+    use_flip: true
+    use_rot: true
     color: RGB
 
   val:
