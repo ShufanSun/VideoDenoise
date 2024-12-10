@@ -6,6 +6,7 @@ from whiteBalance import ImageProcessor
 from demosaic import DemosaicProcessor
 from denoise import ImageDenoiser
 from sharpen import ImageSharpener
+from GammaCorrection import GammaCorrection
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from skimage.io import imread, imshow
@@ -114,25 +115,34 @@ processor = ImageDenoiser('results/sharpen/sharpened_frame.jpg')
 # Load the image
 processor.load_image()
 
-# Display the original image
-# processor.show()  # Directly use the show() method of the PIL.Image object
-
 # Apply denoising with a region size of 5
 region_size = 4  # Adjust this value for stronger/weaker denoising
 denoised_image = processor.denoise_rgb(region_size)
-
-# Display the denoised image
-# denoised_image.show()
 
 # Save the denoised image
 output_path = "results/denoise/denoised_frame.jpg"
 processor.save_image(denoised_image, output_path)
 
-# # Step 3: Gamma Correction
-# gamma_corrected_image = gamma_correction(enhanced_image)
 
-# # Save and display the result
-# cv2.imshow('Processed Image', gamma_corrected_image)
-# cv2.imwrite('processed_image.png', gamma_corrected_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
+# Step 5: Gamma Correction
+# Input image path
+input_image_path = "results/denoise/denoised_frame.jpg"
+
+# Initialize the class and process the image
+processor = GammaCorrection(input_image_path)
+
+try:
+    # Load the image
+    processor.load_image()
+
+    # Apply gamma correction with gamma = 1.13
+    gamma_value = 1.13
+    processor.apply_gamma_correction(gamma_value)
+
+    # Save the results
+    gamma_image_path = 'results/gamma/gamma_image.png'
+    gamma_corrected_image_path = 'results/gamma/gamma_correction.png'
+    processor.save_images(gamma_image_path, gamma_corrected_image_path)
+
+except Exception as e:
+    print(f"Error: {e}")
