@@ -72,7 +72,7 @@ if __name__ == "__main__":
         processor.load_image()
 
         # Apply gamma correction with gamma = 1.13
-        gamma_value = 1.13
+        gamma_value = 1/1.13
         processor.apply_gamma_correction(gamma_value)
 
         # Save the results

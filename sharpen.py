@@ -175,28 +175,3 @@ if __name__ == "__main__":
     comparison.show()
     comparison.save("results/sharpen/comparison.jpg")
     
-    # Save the original, edges, and sharpened images separately
-# sharpener.img.save("results/sharpen/original.jpg")
-# edges.save("results/sharpen/edges.jpg")
-# sharpened_img.save("results/sharpen/sharpened.jpg")
-
-# # Create a combined image for comparison
-# comparison = Image.new("RGB", (sharpener.img.width * 3, sharpener.img.height))
-# comparison.paste(sharpener.img, (0, 0))
-# comparison.paste(edges, (sharpener.img.width, 0))
-# comparison.paste(sharpened_img, (sharpener.img.width * 2, 0))
-
-# # Save and show the sharpened (third frame) from comparison
-# sharpened_frame = comparison.crop((
-#     sharpener.img.width * 2,  # Left
-#     0,                       # Top
-#     sharpener.img.width * 3,  # Right
-#     sharpener.img.height      # Bottom
-# ))
-# sharpened_frame.save("results/sharpen/sharpened_frame.jpg")
-
-# # Save the combined comparison image
-# comparison.show()
-# comparison.save("results/sharpen/comparison.jpg")
-
-
