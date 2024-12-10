@@ -1,27 +1,20 @@
 import cv2
 import numpy as np
-import pyheif
 from PIL import Image
 import matplotlib.pyplot as plt
 from skimage import img_as_ubyte
 
 class ImageProcessor:
-    # https://github.com/j-manansala/white-balancing/blob/main/Color%20Correction%20using%20White%20Balancing%20Methods.ipynb
     def __init__(self, image_path):
         self.image_path = image_path
         self.image = self._load_image()
 
     def _load_image(self):
-        """Load an image from a HEIC file and convert it to a NumPy array."""
-        heif_file = pyheif.read(self.image_path)
-        image = Image.frombytes(
-            heif_file.mode, 
-            heif_file.size, 
-            heif_file.data, 
-            "raw", 
-            heif_file.mode, 
-            heif_file.stride,
-        )
+        """Load an image from a TIFF file and convert it to a NumPy array."""
+        # Open the TIFF file using PIL
+        image = Image.open(self.image_path)
+        
+        # Convert the image to a NumPy array
         image = np.array(image)
 
         # Convert to BGR for OpenCV compatibility
@@ -93,13 +86,13 @@ class ImageProcessor:
             fig.savefig(save_path2)
             print(f"Figure saved to: {save_path2}")
 
-        plt.show()
+        # plt.show()
 
 
 # Example usage
 if __name__ == "__main__":
-    image_path = 'IMG_0456.HEIC'
-    save_path = 'whitebalanced_image.png'  # Specify where to save the processed image
-    save_path2='histogram.png'
+    image_path = '00156_00_0.1s.tif'  # Your TIFF file path
+    save_path = 'whitebalanced_image.tif'  # Specify where to save the processed image
+    save_path2 = 'histogram.png'
     processor = ImageProcessor(image_path)
-    processor.process_and_display(percentile_value=99.5, save_path=save_path,save_path2=save_path2)
+    processor.process_and_display(percentile_value=98, save_path=save_path, save_path2=save_path2)

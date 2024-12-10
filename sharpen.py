@@ -21,6 +21,24 @@ class ImageSharpener:
         
         # Return a tuple of the results for each channel
         return (r_result, g_result, b_result)
+    def laplace2(self, region, scale=1.5):
+        """Apply Laplace operator to a given 3x3 pixel region (for each RGB channel)."""
+        r_values = [coord[0] for coord in region]
+        g_values = [coord[1] for coord in region]
+        b_values = [coord[2] for coord in region]
+
+        # Apply Laplace operator with a scaling factor
+        r_result = scale * (sum(r_values[1:5]) - 4 * r_values[0])
+        g_result = scale * (sum(g_values[1:5]) - 4 * g_values[0])
+        b_result = scale * (sum(b_values[1:5]) - 4 * b_values[0])
+
+        # Ensure values are clamped to the valid range [0, 255]
+        return (
+            int(max(0, min(255, r_result))),
+            int(max(0, min(255, g_result))),
+            int(max(0, min(255, b_result))),
+        )
+
     
     def minus(self, A, B):
         """Subtract image B from image A pixel by pixel."""
@@ -37,12 +55,35 @@ class ImageSharpener:
                 pixels[x, y] = r
 
         return imgdup
+    def minus2(self, A, B, scale=1.5):
+        """Subtract image B from image A pixel by pixel, with a scaling factor for B."""
+        width, height = A.size
+        imgdup = A.copy()
+        pixels = imgdup.load()
 
+        A = A.copy().load()
+        B = B.copy().load()
+
+        for x in range(width):
+            for y in range(height):
+                # Subtract scaled edges from original and clamp values
+                r = tuple(min(255, max(0, A[x, y][i] - int(B[x, y][i] * scale))) for i in range(3))
+                pixels[x, y] = r
+
+        return imgdup
+
+
+    # def sharpen(self):
+    #     """Sharpen the image using the Laplace operator and subtract the edge."""
+    #     edges = self.apply_filter(self.img, self.laplace)
+    #     sharpened_img = self.minus(self.img, edges)
+    #     return edges, sharpened_img
     def sharpen(self):
         """Sharpen the image using the Laplace operator and subtract the edge."""
-        edges = self.apply_filter(self.img, self.laplace)
-        sharpened_img = self.minus(self.img, edges)
-        return sharpened_img
+        edges = self.apply_filter(self.img, lambda region: self.laplace2(region, scale=2.5))
+        sharpened_img = self.minus2(self.img, edges, scale=2.5)
+        return edges, sharpened_img
+
 
     def apply_filter(self, img, filter_func):
         """Apply a given filter function to the image."""
@@ -94,16 +135,68 @@ class ImageSharpener:
 
 # Main script (example)
 if __name__ == "__main__":
-    input_path = "twice-denoised.png"  # Replace with your image path
-    output_path = "sharpened_output.png"  # Define the output path
+    input_path = "results/denoise/twice-denoised.jpg"  # Replace with your image path
+    output_path = "results/sharpen/sharpened_output.jpg"  # Define the output path
 
     sharpener = ImageSharpener(input_path)
     
     # Apply sharpening
-    sharpened_img = sharpener.sharpen()
+    # sharpened_img = sharpener.sharpen()
     
     # Show the sharpened image
-    sharpened_img.show()
+    # sharpened_img.show()
 
     # Save the sharpened image
-    sharpener.save(output_path)
+    # sharpener.save(output_path)
+    # Apply sharpening and get both edges and sharpened images
+    edges, sharpened_img = sharpener.sharpen()
+
+    # Create a combined image for comparison
+    comparison = Image.new("RGB", (sharpener.img.width * 3, sharpener.img.height))
+    comparison.paste(sharpener.img, (0, 0))
+    comparison.paste(edges, (sharpener.img.width, 0))
+    comparison.paste(sharpened_img, (sharpener.img.width, 0))
+
+    # Show and save the comparison image
+    comparison.show()
+    comparison.save("results/sharpen/comparison.jpg")
+    # Save the original, edges, and sharpened images separately
+    sharpener.img.save("results/sharpen/original.jpg")
+    edges.save("results/sharpen/edges.jpg")
+    sharpened_img.save("results/sharpen/sharpened.jpg")
+
+    # Create a combined image for comparison
+    comparison = Image.new("RGB", (sharpener.img.width * 3, sharpener.img.height))
+    comparison.paste(sharpener.img, (0, 0))
+    comparison.paste(edges, (sharpener.img.width, 0))
+    comparison.paste(sharpened_img, (sharpener.img.width * 2, 0))
+
+    # Show and save the comparison image
+    comparison.show()
+    comparison.save("results/sharpen/comparison.jpg")
+    
+    # Save the original, edges, and sharpened images separately
+# sharpener.img.save("results/sharpen/original.jpg")
+# edges.save("results/sharpen/edges.jpg")
+# sharpened_img.save("results/sharpen/sharpened.jpg")
+
+# # Create a combined image for comparison
+# comparison = Image.new("RGB", (sharpener.img.width * 3, sharpener.img.height))
+# comparison.paste(sharpener.img, (0, 0))
+# comparison.paste(edges, (sharpener.img.width, 0))
+# comparison.paste(sharpened_img, (sharpener.img.width * 2, 0))
+
+# # Save and show the sharpened (third frame) from comparison
+# sharpened_frame = comparison.crop((
+#     sharpener.img.width * 2,  # Left
+#     0,                       # Top
+#     sharpener.img.width * 3,  # Right
+#     sharpener.img.height      # Bottom
+# ))
+# sharpened_frame.save("results/sharpen/sharpened_frame.jpg")
+
+# # Save the combined comparison image
+# comparison.show()
+# comparison.save("results/sharpen/comparison.jpg")
+
+

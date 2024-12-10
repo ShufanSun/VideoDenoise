@@ -2,6 +2,10 @@ import cv2
 import numpy as np
 import pyheif
 from PIL import Image
+from whiteBalance import ImageProcessor
+from demosaic import DemosaicProcessor
+from denoise import ImageDenoiser
+from sharpen import ImageSharpener
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from skimage.io import imread, imshow
@@ -51,22 +55,84 @@ def gamma_correction(image, gamma=2.2):
     return cv2.LUT(image, table)
 
 # Load the image
-image_path = 'IMG_0456.HEIC'
-output_path=convert_heic_to_png(image_path, "example.png")
+# image_path = 'IMG_0456.HEIC'
+# output_path=convert_heic_to_png(image_path, "example.png")
 
-image = cv2.imread(output_path)
+# image = cv2.imread(output_path)
+image_path= 'results/frame_0290.jpg'
+# "C:\Users\sofin\Documents\_Current Classes\ECE722\frames7\frame_0290.jpg"
+processor = ImageProcessor(image_path)
+save_path = 'results/whiteBalancing/whitebalanced_image.jpg'  # Specify where to save the processed image
+save_path2 = 'results/whiteBalancing/histogram.jpg'  # Path for saving the histogram plot
+save_path3='results/demosaic/demosaiced.jpg'
 
 # Step 1: White Balance
-balanced_image = white_balance(image)
+processor.process_and_display(percentile_value=99.9, save_path=save_path, save_path2=save_path2)
 
-# Step 2: Denoising and Sharpening
-enhanced_image = denoise_and_sharpen(balanced_image)
+# Step 2: Demosaicing
+processor = DemosaicProcessor(save_path)
+# Load the raw image
+processor.load_image()
+# Perform bilinear demosaicing
+r, g, b = processor.bilinear()
 
-# Step 3: Gamma Correction
-gamma_corrected_image = gamma_correction(enhanced_image)
+# Save and display the image
+processor.save_image(np.dstack((r,g,b)), save_path3)
+# processor.display_image(r, g, b)
 
-# Save and display the result
-cv2.imshow('Processed Image', gamma_corrected_image)
-cv2.imwrite('processed_image.png', gamma_corrected_image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# Step 3: Sharpening
+processor = ImageSharpener(save_path)
+# output_path = "results/sharpen/sharpened_output.jpg"  # Define the output path
+edges, sharpened_img = processor.sharpen()
+
+processor.img.save("results/sharpen/original.jpg")
+edges.save("results/sharpen/edges.jpg")
+sharpened_img.save("results/sharpen/sharpened.jpg")
+
+# Create a combined image for comparison
+comparison = Image.new("RGB", (processor.img.width * 3, processor.img.height))
+comparison.paste(processor.img, (0, 0))
+comparison.paste(edges, (processor.img.width, 0))
+comparison.paste(sharpened_img, (processor.img.width * 2, 0))
+    
+# Save and show the sharpened (third frame) from comparison
+sharpened_frame = comparison.crop((
+    processor.img.width * 2,  # Left
+    0,                       # Top
+    processor.img.width * 3,  # Right
+    processor.img.height      # Bottom
+))
+sharpened_frame.save("results/sharpen/sharpened_frame.jpg")
+
+# Save the combined comparison image
+# comparison.show()
+comparison.save("results/sharpen/comparison.jpg")
+
+# Step 4: Denoising
+processor = ImageDenoiser('results/sharpen/sharpened_frame.jpg')
+
+# Load the image
+processor.load_image()
+
+# Display the original image
+# processor.show()  # Directly use the show() method of the PIL.Image object
+
+# Apply denoising with a region size of 5
+region_size = 4  # Adjust this value for stronger/weaker denoising
+denoised_image = processor.denoise_rgb(region_size)
+
+# Display the denoised image
+# denoised_image.show()
+
+# Save the denoised image
+output_path = "results/denoise/denoised_frame.jpg"
+processor.save_image(denoised_image, output_path)
+
+# # Step 3: Gamma Correction
+# gamma_corrected_image = gamma_correction(enhanced_image)
+
+# # Save and display the result
+# cv2.imshow('Processed Image', gamma_corrected_image)
+# cv2.imwrite('processed_image.png', gamma_corrected_image)
+# cv2.waitKey(0)
+# cv2.destroyAllWindows()

@@ -2,12 +2,10 @@ import cv2
 import os
 
 # Specify the input video file
-video_path = "C:\\Users\\sofin\\Documents\\_Current Classes\\ECE722\\videoData\\video_20210208_212449.mp4"
-# "C:\Users\sofin\Documents\_Current Classes\ECE722\videoData\video_20210208_212449.mp4"
-# "C:\Users\sofin\Documents\_Current Classes\ECE722\videoData\video_20210208_212419.mp4"
+video_path = "C:\\Users\\sofin\\Documents\\_Current Classes\\ECE722\\videoData\\C0004.MP4"
 
 # Specify the output folder for frames
-output_folder = "C:\\Users\\sofin\\Documents\\_Current Classes\\ECE722\\frames4"
+output_folder = "C:\\Users\\sofin\\Documents\\_Current Classes\\ECE722\\frames7"
 os.makedirs(output_folder, exist_ok=True)
 
 # Load the video

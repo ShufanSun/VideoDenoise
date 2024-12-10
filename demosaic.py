@@ -23,7 +23,6 @@ class DemosaicProcessor:
         b[1::2, 1::2] += im[1::2, 1::2]
         return r, g, b
 
-    # Demosaicing
     def bilinear(self):
         r, g, b = self.bayer(self.raw_image)  # Use self.bayer here
 
@@ -44,10 +43,11 @@ class DemosaicProcessor:
         convb2 = convolve2d(b + convb1, k_g, 'same')
         b = b + convb1 + convb2
 
-        # Normalize the values to the range 0-255 (for 8-bit images)
-        r = np.clip(r * 255.0 / np.max(r), 0, 255)
-        g = np.clip(g * 255.0 / np.max(g), 0, 255)
-        b = np.clip(b * 255.0 / np.max(b), 0, 255)
+        # Normalize all channels together
+        max_val = np.max(self.raw_image)  # Use the same max value for all channels
+        r = np.clip(r * 255.0 / max_val, 0, 255)
+        g = np.clip(g * 255.0 / max_val, 0, 255)
+        b = np.clip(b * 255.0 / max_val, 0, 255)
 
         return r.astype(np.uint8), g.astype(np.uint8), b.astype(np.uint8)
 
@@ -71,7 +71,7 @@ class DemosaicProcessor:
 # Example usage
 if __name__ == "__main__":
     # Initialize the processor with the path to the raw Bayer image
-    processor = DemosaicProcessor("whitebalanced_image.jpg")
+    processor = DemosaicProcessor("whitebalanced_image.tif")
     
     # Load the raw image
     processor.load_image()
@@ -80,5 +80,5 @@ if __name__ == "__main__":
     r, g, b = processor.bilinear()
 
     # Save and display the image
-    processor.save_image(np.dstack((r,g,b)), "demosaiced_image.jpg")
+    processor.save_image(np.dstack((r,g,b)), "demosaiced_image.tif")
     processor.display_image(r, g, b)

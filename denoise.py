@@ -1,78 +1,77 @@
 from PIL import Image
-from filters import *
 
-def median(data):
-    """Applies a median filter on the given data."""
-    data = sorted(data)
-    index = len(data) // 2  # Integer division to get the middle index
-    return data[index]
+class ImageDenoiser:
+    def __init__(self, img_path):
+        """Initialize the denoiser with an image path."""
+        self.img_path = img_path
+        self.img = None  # Image will be loaded later
+    
+    def load_image(self):
+        """Load the image from the provided path."""
+        self.img = Image.open(self.img_path)
+        self.img = self.img.convert("RGB")  # Ensure the image is in RGB format
+    
+    def median(self, data):
+        """Applies a median filter on the given data."""
+        data = sorted(data)
+        index = len(data) // 2  # Integer division to get the middle index
+        return data[index]
 
-def denoise_rgb(img):
-    """Applies the median filter to each RGB channel of the image."""
-    # Split the image into its R, G, B channels
-    r, g, b = img.split()
+    def extract_region(self, img, x, y, offset):
+        """Extracts a square region around (x, y) with the given offset."""
+        width, height = img.size
+        pixels = img.load()
+        region = []
 
-    # Apply the filter (median) to each channel
-    r = apply_median_filter(r)
-    g = apply_median_filter(g)
-    b = apply_median_filter(b)
+        for dx in range(-offset, offset + 1):
+            for dy in range(-offset, offset + 1):
+                # Handle out-of-bounds coordinates
+                nx = min(max(x + dx, 0), width - 1)
+                ny = min(max(y + dy, 0), height - 1)
+                region.append(pixels[nx, ny])
 
-    # Merge the channels back into an RGB image
-    return Image.merge("RGB", (r, g, b))
+        return region
 
-def apply_median_filter(channel_img):
-    """Applies a median filter to a single image channel."""
-    width, height = channel_img.size
-    imgdup = channel_img.copy()
-    pixels = imgdup.load()
+    def apply_median_filter(self, channel_img, region_size=3):
+        """Applies a median filter to a single image channel with a given region size."""
+        width, height = channel_img.size
+        imgdup = channel_img.copy()
+        pixels = imgdup.load()
 
-    for x in range(width):
-        for y in range(height):
-            # Extract the 3x3 region and apply the median filter
-            region = region3x3(channel_img, x, y)
-            pixels[x, y] = median(region)
+        # Calculate the offset based on region size
+        offset = region_size // 2
 
-    return imgdup
+        for x in range(width):
+            for y in range(height):
+                # Extract the region and apply the median filter
+                region = self.extract_region(channel_img, x, y, offset)
+                pixels[x, y] = self.median(region)
 
-def region3x3(img, x, y):
-    """Get the 3x3 region of pixels surrounding (x, y)."""
-    me = getpixel(img, x, y)
-    N = getpixel(img, x, y - 1)
-    S = getpixel(img, x, y + 1)
-    E = getpixel(img, x + 1, y)
-    W = getpixel(img, x - 1, y)
-    NW = getpixel(img, x - 1, y - 1)
-    NE = getpixel(img, x + 1, y - 1)
-    SE = getpixel(img, x + 1, y + 1)
-    SW = getpixel(img, x - 1, y + 1)
+        return imgdup
 
-    return [me, N, E, S, W, NW, NE, SE, SW]
+    def denoise_rgb(self, region_size=5):
+        """Applies the median filter to each RGB channel with a specified region size."""
+        # Split the image into its R, G, B channels
+        r, g, b = self.img.split()
 
-def getpixel(img, x, y):
-    """Safely gets a pixel value, handling out-of-bounds coordinates."""
-    width, height = img.size
-    pixels = img.load()
+        # Apply the filter with the updated region size
+        r = self.apply_median_filter(r, region_size)
+        g = self.apply_median_filter(g, region_size)
+        b = self.apply_median_filter(b, region_size)
 
-    if x < 0: x = 0
-    if x >= width: x = width - 1
-    if y < 0: y = 0
-    if y >= height: y = height - 1
+        # Merge the channels back into an RGB image
+        return Image.merge("RGB", (r, g, b))
 
-    return pixels[x, y]
+    def save(self, output_path, format="JPEG"):
+        """Save the processed image to the specified path."""
+        self.img.save(output_path, format=format)
+        print(f"Processed image saved to: {output_path}")
 
-# Main script
-input_path = 'whitebalanced_image.png'  # Change this to your image path
+    def show(self):
+        """Display the current image."""
+        self.img.show()
 
-# Open and process the image
-img = Image.open(input_path)
-img = img.convert("RGB")  # Ensure the image is in RGB mode
-img.show()
-
-# Apply denoising to the RGB channels
-denoised_image = denoise_rgb(img)
-denoised_image.show()
-
-# Save the denoised image
-output_path = f"twice-denoised.png"
-denoised_image.save(output_path)
-print(f"Saved denoised image to {output_path}")
+    def save_image(self, image, output_path):
+        """Save the given image to the specified path."""
+        image.save(output_path)
+        print(f"Processed image saved to: {output_path}")
